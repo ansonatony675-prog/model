@@ -1,0 +1,47 @@
+name: Full CI/CD pipeline
+
+
+on:
+  push:
+  branches:[main]
+
+
+permissions:
+   contents:read
+   pages:write
+   id_token:wirte
+
+   jobs:
+     build-and-test:
+       runs-on: ubuntu-latest
+
+  steps:
+      name:Checkout source code
+      uses:actins/checkout@v4
+
+      name:validate application files
+      run:
+       test -f index.html
+       echo "Application files validated sucessfully"
+
+       name:Run automated test
+       run:
+       grep -q "Full CI/CD Pipeline Demo" build/index.html
+       echo "Automated test passed"
+
+       name:Upload pull artifact
+       uses:actions/upload-pages-artifact@v3
+       with:
+        path:bulid
+
+  deploy: 
+      if:github.event_name == 'push' && github.ref == 'refs/heads/main'
+      needs:build-and-test
+      runs on:ubuntu-latest
+      environment:
+      name:github-pages
+      url:${{steps.deployment.output.page_url}}
+    steps:
+    name:Deploy to Github Pages
+    id:deployment
+    uses:actions/deploy-pages@v4
